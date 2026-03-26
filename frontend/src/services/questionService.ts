@@ -91,7 +91,12 @@ async function addQuestion(
   return response.json();
 }
 
-async function updateQuestion(question: Question) {
+async function updateQuestion(
+  question: Omit<
+    Question,
+    "createdAt" | "modifiedAt" | "createdBy" | "modifiedBy"
+  >,
+) {
   const response = await apiFetch(
     `${BASE_URL}/api/questions/${question.questionId}`,
     {

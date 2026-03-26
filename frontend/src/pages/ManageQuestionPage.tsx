@@ -1,4 +1,4 @@
-import { Box, IconButton, TableCell, TableRow } from "@mui/material";
+import { Box, Button, IconButton, TableCell, TableRow } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AdminSideMenu from "../features/admin/AdminSideMenu";
 import AdminTable from "../features/admin/AdminTable";
@@ -8,7 +8,7 @@ import useQuestion from "../hooks/useQuestion";
 import { useEffect, useState } from "react";
 import type Question from "../types/question";
 import DeletePopUp from "../features/admin/DeletePopUp";
-import AddQuestionForm from "../features/admin/AddQuestionForm";
+import QuestionForm from "../features/admin/QuestionForm";
 
 function ManageQuestionPage() {
   const tableFields = [
@@ -38,15 +38,18 @@ function ManageQuestionPage() {
     questions,
     isLoading,
     isAdding,
+    isEditing,
     error,
     loadQuestions,
     deleteQuestion,
     addQuestion,
+    editQuestion,
     deletingQuestionId,
     page,
   } = useQuestion();
 
-  const [confirmTarget, setConfirmTarget] = useState<Question | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
+  const [editTarget, setEditTarget] = useState<Question | null>(null);
   const [addFormOpen, setAddFormOpen] = useState(false);
 
   useEffect(() => {
@@ -57,17 +60,17 @@ function ManageQuestionPage() {
   async function handleSearchSubmit() {}
 
   function handleDeleteClick(question: Question) {
-    setConfirmTarget(question);
+    setDeleteTarget(question);
   }
 
   async function handleConfirmDelete() {
-    if (!confirmTarget) return;
-    await deleteQuestion(confirmTarget.questionId);
-    setConfirmTarget(null);
+    if (!deleteTarget) return;
+    await deleteQuestion(deleteTarget.questionId);
+    setDeleteTarget(null);
   }
 
   function handleCancelDelete() {
-    setConfirmTarget(null);
+    setDeleteTarget(null);
   }
 
   async function handleConfirmAdd(
@@ -82,6 +85,24 @@ function ManageQuestionPage() {
 
   function handleCancelAdd() {
     setAddFormOpen(false);
+  }
+
+  function handleEditClick(question: Question) {
+    setEditTarget(question);
+  }
+
+  async function handleConfirmEdit(
+    question: Omit<
+      Question,
+      "createdAt" | "modifiedAt" | "createdBy" | "modifiedBy"
+    >,
+  ) {
+    await editQuestion(question);
+    setEditTarget(null);
+  }
+
+  function handleCancelEdit() {
+    setEditTarget(null);
   }
 
   return (
@@ -109,26 +130,53 @@ function ManageQuestionPage() {
               {new Date(question.createdAt).toLocaleDateString()}
             </TableCell>
             <TableCell>
-              <IconButton
-                size="small"
-                onClick={() => handleDeleteClick(question)}
-                aria-label={`Delete ${question.questionId}`}
+              <Box
+                sx={{
+                  minWidth: 100,
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 2,
+                }}
               >
-                <DeleteIcon />
-              </IconButton>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    borderRadius: 4,
+                    fontSize: 10,
+                    textTransform: "none",
+                    color: "grey.600",
+                    borderColor: "grey.400",
+                    "&:hover": {
+                      borderColor: "grey.600",
+                      backgroundColor: "grey.50",
+                    },
+                  }}
+                  onClick={() => handleEditClick(question)}
+                >
+                  Edit
+                </Button>
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteClick(question)}
+                  aria-label={`Delete ${question.questionId}`}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
             </TableCell>
           </TableRow>
         )}
       />
 
       <DeletePopUp
-        open={!!confirmTarget}
+        open={!!deleteTarget}
         title={"Delete Question"}
         description={
           <>
             Are you sure you want to delete{" "}
-            <strong>{confirmTarget?.questionName}</strong> (
-            {confirmTarget?.questionId})
+            <strong>{deleteTarget?.questionName}</strong> (
+            {deleteTarget?.questionId})
           </>
         }
         isDeleting={!!deletingQuestionId}
@@ -136,11 +184,21 @@ function ManageQuestionPage() {
         onCancel={handleCancelDelete}
       />
 
-      <AddQuestionForm
+      <QuestionForm
         open={addFormOpen}
-        isAdding={isAdding}
+        isActive={isAdding}
         onCancel={handleCancelAdd}
         onConfirm={handleConfirmAdd}
+      />
+
+      <QuestionForm
+        key={editTarget?.questionId}
+        open={!!editTarget}
+        isActive={isEditing}
+        mode="edit"
+        initialData={editTarget}
+        onCancel={handleCancelEdit}
+        onConfirm={handleConfirmEdit}
       />
     </Box>
   );

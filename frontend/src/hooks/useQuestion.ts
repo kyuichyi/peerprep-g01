@@ -4,12 +4,14 @@ import {
   fetchQuestions,
   deleteQuestion as deleteQuestionRequest,
   addQuestion as addQuestionRequest,
+  updateQuestion as editQuestionRequest,
 } from "../services/questionService";
 
 function useQuestion() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,11 +42,10 @@ function useQuestion() {
     setDeletingQuestionId(questionId);
     try {
       await deleteQuestionRequest(questionId);
-      setQuestions((prev) => prev.filter((q) => q.questionId !== questionId));
+      await loadQuestions();
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
+      if (err instanceof Error) setError(err.message);
+      else {
         console.log(
           "An unexpected error occurred while attempting to delete question",
         );
@@ -66,9 +67,8 @@ function useQuestion() {
       await addQuestionRequest(question);
       await loadQuestions();
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
+      if (err instanceof Error) setError(err.message);
+      else {
         console.log(
           "An unexpected error occurred while attempting to add question",
         );
@@ -78,10 +78,33 @@ function useQuestion() {
     }
   }
 
+  async function editQuestion(
+    question: Omit<
+      Question,
+      "createdAt" | "createdBy" | "modifiedAt" | "modifiedBy"
+    >,
+  ) {
+    setIsEditing(true);
+
+    try {
+      await editQuestionRequest(question);
+      await loadQuestions();
+    } catch (err) {
+      if (err instanceof Error) setError(err.message);
+      else
+        console.log(
+          "An unexpected error occurred while attempting to add question",
+        );
+    } finally {
+      setIsEditing(false);
+    }
+  }
+
   return {
     questions,
     isLoading,
     isAdding,
+    isEditing,
     error,
     page,
     totalPages,
@@ -89,6 +112,7 @@ function useQuestion() {
     loadQuestions,
     deleteQuestion,
     addQuestion,
+    editQuestion,
   };
 }
 
