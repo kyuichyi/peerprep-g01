@@ -67,8 +67,12 @@ async function deleteQuestion(questionId: string) {
 }
 
 async function addQuestion(
-  question: Omit<Question, "questionId" | "createdAt" | "modifiedAt">,
+  question: Omit<
+    Question,
+    "questionId" | "createdAt" | "modifiedAt" | "createdBy" | "modifiedBy"
+  >,
 ) {
+  console.log("sending:", JSON.stringify(question));
   const response = await apiFetch(`${BASE_URL}/api/questions/add/`, {
     method: "POST",
     body: JSON.stringify(question),

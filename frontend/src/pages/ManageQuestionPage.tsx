@@ -1,15 +1,4 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  IconButton,
-  TableCell,
-  TableRow,
-} from "@mui/material";
+import { Box, IconButton, TableCell, TableRow } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AdminSideMenu from "../features/admin/AdminSideMenu";
 import AdminTable from "../features/admin/AdminTable";
@@ -18,6 +7,8 @@ import AdminTableAddButton from "../components/RoundedFilledButton";
 import useQuestion from "../hooks/useQuestion";
 import { useEffect, useState } from "react";
 import type Question from "../types/question";
+import DeletePopUp from "../features/admin/DeletePopUp";
+import AddQuestionForm from "../features/admin/AddQuestionForm";
 
 function ManageQuestionPage() {
   const tableFields = [
@@ -46,14 +37,17 @@ function ManageQuestionPage() {
   const {
     questions,
     isLoading,
+    isAdding,
     error,
     loadQuestions,
     deleteQuestion,
+    addQuestion,
     deletingQuestionId,
     page,
   } = useQuestion();
 
   const [confirmTarget, setConfirmTarget] = useState<Question | null>(null);
+  const [addFormOpen, setAddFormOpen] = useState(false);
 
   useEffect(() => {
     loadQuestions();
@@ -76,13 +70,30 @@ function ManageQuestionPage() {
     setConfirmTarget(null);
   }
 
+  async function handleConfirmAdd(
+    question: Omit<
+      Question,
+      "questionId" | "createdAt" | "modifiedAt" | "createdBy" | "modifiedBy"
+    >,
+  ) {
+    await addQuestion(question);
+    setAddFormOpen(false);
+  }
+
+  function handleCancelAdd() {
+    setAddFormOpen(false);
+  }
+
   return (
     <Box sx={{ display: "flex", width: "100vw", height: "100vh" }}>
       <AdminSideMenu />
       <AdminTable
         tableButtons={[
           <SearchBar submitHandler={handleSearchSubmit} />,
-          <AdminTableAddButton label={"Add Question"} />,
+          <AdminTableAddButton
+            label={"Add Question"}
+            onClick={() => setAddFormOpen(true)}
+          />,
         ]}
         tableFields={tableFields}
         rows={questions}
@@ -110,27 +121,27 @@ function ManageQuestionPage() {
         )}
       />
 
-      <Dialog open={!!confirmTarget} onClose={handleCancelDelete}>
-        <DialogTitle>Delete Question</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+      <DeletePopUp
+        open={!!confirmTarget}
+        title={"Delete Question"}
+        description={
+          <>
             Are you sure you want to delete{" "}
             <strong>{confirmTarget?.questionName}</strong> (
             {confirmTarget?.questionId})
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete}>Cancel</Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-            disabled={!!deletingQuestionId}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+        isDeleting={!!deletingQuestionId}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+
+      <AddQuestionForm
+        open={addFormOpen}
+        isAdding={isAdding}
+        onCancel={handleCancelAdd}
+        onConfirm={handleConfirmAdd}
+      />
     </Box>
   );
 }

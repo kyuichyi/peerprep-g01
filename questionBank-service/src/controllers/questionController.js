@@ -120,7 +120,9 @@ exports.addQuestion = async (req, res) => {
     privateTestCase,
   } = req.body;
 
-  const createdBy = req.user?.userId || "a0000000-0000-0000-0000-000000000001";
+  console.log("received headers:", req.headers["x-user-id"]);
+  const createdBy =
+    req.headers["x-user-id"] || "a0000000-0000-0000-0000-000000000001";
 
   try {
     const query = `
