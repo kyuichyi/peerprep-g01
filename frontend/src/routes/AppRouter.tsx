@@ -8,10 +8,10 @@ import {
 import SignUp from "../pages/SignUpPage";
 import Login from "../pages/LoginPage";
 import UserHomePage from "../pages/UserHomePage";
-import ManageUserPage from "../pages/ManageUserPage";
-import ManageAdminPage from "../pages/ManageAdminPage";
-import ManageQuestionPage from "../pages/ManageQuestionPage";
-import ManageRoomPage from "../pages/ManageRoomPage";
+import ManageUserPage from "../pages/admin/ManageUserPage";
+import ManageAdminPage from "../pages/admin/ManageAdminPage";
+import ManageQuestionPage from "../pages/admin/ManageQuestionPage";
+import ManageRoomPage from "../pages/admin/ManageRoomPage";
 import useAuthStore from "../store/authStore";
 import CollabPage from "../pages/CollabPage";
 

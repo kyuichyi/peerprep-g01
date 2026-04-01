@@ -11,7 +11,7 @@ function PageHeader() {
         display: "flex",
         alignItems: "center",
         bgcolor: "white",
-        borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
+        borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
       }}
     >
       <img
