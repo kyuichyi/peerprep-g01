@@ -18,6 +18,8 @@ export interface UseCollabSessionReturn {
   setLanguage: (lang: string) => void;
   handleEditorMount: OnMount;
   handleLeave: () => void;
+  leaveDialogOpen: boolean;
+  setLeaveDialogOpen: (status: boolean) => void;
 }
 
 function UseCollabSession(): UseCollabSessionReturn {
@@ -33,6 +35,8 @@ function UseCollabSession(): UseCollabSessionReturn {
   const [question, setQuestion] = useState<Question | null>(null);
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>("waiting");
   const [language, setLanguage] = useState("javascript");
+
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -108,6 +112,8 @@ function UseCollabSession(): UseCollabSessionReturn {
     setLanguage,
     handleEditorMount,
     handleLeave,
+    leaveDialogOpen,
+    setLeaveDialogOpen,
   };
 }
 

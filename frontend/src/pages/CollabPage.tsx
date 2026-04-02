@@ -5,7 +5,6 @@ import {
   MenuItem,
   Select,
   Typography,
-  Chip,
 } from "@mui/material";
 import PageHeader from "../features/user/PageHeader";
 import UseCollabSession from "../hooks/useCollabSession";
@@ -13,17 +12,20 @@ import CollabPanel from "../features/user/CollabPanel";
 import CodeIcon from "@mui/icons-material/Code";
 import ChatIcon from "@mui/icons-material/Chat";
 import ArticleIcon from "@mui/icons-material/Article";
-import { red, pink, cyan, blue, green, orange } from "@mui/material/colors";
+import { pink, cyan, blue, green, orange } from "@mui/material/colors";
 import { Editor } from "@monaco-editor/react";
+import ChipAttribute from "../components/ChipAttribute";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 function CollabPage() {
   const {
     question,
-    partnerStatus,
     language,
     setLanguage,
     handleEditorMount,
     handleLeave,
+    leaveDialogOpen,
+    setLeaveDialogOpen,
   } = UseCollabSession();
 
   return (
@@ -55,36 +57,20 @@ function CollabPage() {
           >
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                Maximum Depth of Binary Tree
+                {question?.questionName ?? "Loading Title..."}
               </Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Chip
-                  variant="outlined"
-                  label="Sorting & Searching Algorithms"
-                  size="small"
-                  sx={{
-                    borderColor: pink[400],
-                    bgcolor: pink[50],
-                    color: pink[400],
-                  }}
+                <ChipAttribute
+                  label={question?.topicId ?? "Loading Topic"}
+                  color={pink}
                 />
-                <Chip
-                  variant="outlined"
-                  label="Medium"
-                  size="small"
-                  sx={{
-                    borderColor: cyan[400],
-                    bgcolor: cyan[50],
-                    color: cyan[400],
-                  }}
+                <ChipAttribute
+                  label={question?.difficulty ?? "Loading Difficulty"}
+                  color={cyan}
                 />
               </Box>
               <Typography variant="body2" color="text.secondary">
-                {question?.description ?? "Loading..."}
-                Given an array of integers nums and an integer target, return
-                indices of the two numbers such that they add up to target. You
-                may assume that each input would have exactly one solution, and
-                you may not use the same element twice.
+                {question?.description ?? "Loading Description..."}
               </Typography>
             </Box>
           </CollabPanel>
@@ -114,7 +100,8 @@ function CollabPage() {
             {/* Monaco editor goes here */}
             <Editor
               height="100%"
-              language="python"
+              language={language}
+              onMount={handleEditorMount}
               options={{
                 fontSize: 14,
                 minimap: { enabled: false },
@@ -142,11 +129,23 @@ function CollabPage() {
       >
         <Button
           variant="contained"
-          sx={{ marginBottom: 2, bgcolor: red["A400"] }}
+          onClick={() => setLeaveDialogOpen(true)}
+          color="warning"
+          sx={{ marginBottom: 2 }}
         >
           Leave Session
         </Button>
       </Container>
+
+      <ConfirmDialog
+        open={leaveDialogOpen}
+        title="Leave Session"
+        description="Are you sure you want to leave? Your partner will be notified."
+        confirmLabel="Leave"
+        confirmColor="warning"
+        onConfirm={handleLeave}
+        onCancel={() => setLeaveDialogOpen(false)}
+      />
     </Box>
   );
 }
