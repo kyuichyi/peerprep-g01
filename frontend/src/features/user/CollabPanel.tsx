@@ -1,10 +1,9 @@
 import { Box, Typography } from "@mui/material";
 import type { ReactNode } from "react";
-import type { SvgIconComponent } from "@mui/icons-material";
 
 interface CollabPanelProps {
   title: string;
-  Icon: SvgIconComponent;
+  Icon: ReactNode;
   children?: ReactNode;
   headerActions?: ReactNode;
 }
@@ -12,7 +11,7 @@ interface CollabPanelProps {
 function CollabPanel({
   title,
   Icon,
-  children = null,
+  children,
   headerActions,
 }: CollabPanelProps) {
   return (
@@ -37,13 +36,13 @@ function CollabPanel({
           gap: 1,
           px: 2,
           py: 1,
-          bgcolor: "grey.300",
+          bgcolor: "grey.200",
           borderBottom: "1px solid",
           borderColor: "grey.300",
           flexShrink: 0,
         }}
       >
-        <Icon sx={{ fontSize: 18, color: "grey.600" }} />
+        {Icon}
         <Typography
           variant="body2"
           fontWeight={600}
@@ -56,7 +55,11 @@ function CollabPanel({
       </Box>
 
       {/* Content */}
-      <Box sx={{ flexGrow: 1, overflow: "auto" }}>{children}</Box>
+      <Box
+        sx={{ width: "100%", height: "100%", boxSizing: "border-box", p: 2.5 }}
+      >
+        {children}
+      </Box>
     </Box>
   );
 }
