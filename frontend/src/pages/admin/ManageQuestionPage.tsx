@@ -7,8 +7,8 @@ import AdminTableAddButton from "../../components/RoundedFilledButton";
 import useQuestion from "../../hooks/useQuestion";
 import { useEffect, useState } from "react";
 import type Question from "../../types/question";
-import DeletePopUp from "../../features/admin/DeletePopUp";
 import QuestionForm from "../../features/admin/QuestionForm";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 function ManageQuestionPage() {
   const tableFields = [
@@ -169,7 +169,7 @@ function ManageQuestionPage() {
         )}
       />
 
-      <DeletePopUp
+      <ConfirmDialog
         open={!!deleteTarget}
         title={"Delete Question"}
         description={
@@ -179,7 +179,9 @@ function ManageQuestionPage() {
             {deleteTarget?.questionId})
           </>
         }
-        isDeleting={!!deletingQuestionId}
+        confirmLabel="Delete"
+        confirmColor="error"
+        isLoading={!!deletingQuestionId}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
