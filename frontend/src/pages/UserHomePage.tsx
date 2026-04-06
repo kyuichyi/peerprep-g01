@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Typography,
   Button,
@@ -9,10 +8,9 @@ import {
   Grid,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../store/authStore";
-import { fetchTopics } from "../services/questionService";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PageHeader from "../features/user/PageHeader";
+import useMatch from "../hooks/useMatch";
 
 const DIFFICULTIES = [
   {
@@ -63,26 +61,19 @@ const HOW_IT_WORKS = [
 
 function UserHomePage() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
-  const [selectedTopic, setSelectedTopic] = useState<string>("");
-  const [selectedDifficulty, setSelectedDifficulty] =
-    useState<string>("Medium");
-  const [topics, setTopics] = useState<
-    { topicId: string; topicName: string }[]
-  >([]);
-  const [topicLoading, setTopicsLoading] = useState(true);
+  const {
+    user,
+    topics,
+    topicLoading,
+    selectedTopic,
+    setSelectedTopic,
+    selectedDifficulty,
+    setSelectedDifficulty,
+    handleMatchRequest,
+  } = useMatch();
+
   // Check if the user has admin privileges
   const isAdmin = user?.role === "2" || user?.role === "3";
-
-  useEffect(() => {
-    fetchTopics()
-      .then(({ data }) => {
-        setTopics(data);
-        if (data.length > 0) setSelectedTopic(data[0].topicName);
-      })
-      .catch(console.error)
-      .finally(() => setTopicsLoading(false));
-  }, []);
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", pb: 6 }}>
@@ -143,11 +134,11 @@ function UserHomePage() {
             ) : (
               <Grid container spacing={4} sx={{ mb: 3 }}>
                 {topics.map((t) => {
-                  const selected = selectedTopic === t.topicName;
+                  const selected = selectedTopic === t;
                   return (
                     <Grid size={3} key={t.topicId}>
                       <Box
-                        onClick={() => setSelectedTopic(t.topicName)}
+                        onClick={() => setSelectedTopic(t)}
                         sx={{
                           border: selected
                             ? "2px solid #1976d2"
@@ -232,7 +223,7 @@ function UserHomePage() {
               </Typography>
               {selectedTopic && (
                 <Chip
-                  label={selectedTopic}
+                  label={selectedTopic.topicName}
                   size="small"
                   color="primary"
                   variant="outlined"
