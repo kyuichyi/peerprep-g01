@@ -60,12 +60,12 @@ function useCollabSession(): UseCollabSessionReturn {
       setQuestion((prev) => prev ?? data);
     });
 
-    socket.on("yjs-state", (state: Uint8Array) => {
-      Y.applyUpdate(ydoc, state);
+    socket.on("yjs-state", (state: unknown) => {
+      Y.applyUpdate(ydoc, new Uint8Array(state as ArrayBuffer));
     });
 
-    socket.on("yjs-update", (update: Uint8Array) => {
-      Y.applyUpdate(ydoc, update, "remote");
+    socket.on("yjs-update", (update: unknown) => {
+      Y.applyUpdate(ydoc, new Uint8Array(update as ArrayBuffer), "remote");
     });
 
     socket.on("partner_joined", () => setPartnerStatus("connected"));
