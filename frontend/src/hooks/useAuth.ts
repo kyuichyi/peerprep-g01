@@ -1,6 +1,6 @@
 import { useState } from "react";
 import useAuthStore from "../store/authStore";
-import { loginUser } from "../services/userService";
+import { loginUser, logoutUser } from "../services/userService";
 import { useNavigate } from "react-router-dom";
 
 function useAuth() {
@@ -13,8 +13,8 @@ function useAuth() {
     setIsLoading(true);
     setError(null);
     try {
-      const { user, token } = await loginUser(email, password);
-      setUser(user, token);
+      const { user } = await loginUser(email, password);
+      setUser(user);
       if (user.role === "1") {
         navigate("/home");
       } else {
@@ -33,7 +33,8 @@ function useAuth() {
     }
   }
 
-  function logout() {
+  async function logout() {
+    await logoutUser();
     clearUser();
   }
 

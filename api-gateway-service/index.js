@@ -4,9 +4,13 @@ const cors = require("cors");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const Redis = require("ioredis");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+//connect to Redis for token blacklist (cookie invalidation on logout)
+const redisClient = new Redis(process.env.REDIS_URL);
 
 app.use(cookieParser());
 app.use(
@@ -21,17 +25,23 @@ const QUESTION_SERVICE_URL = process.env.QUESTION_SERVICE_URL;
 const COLLAB_SERVICE_URL = process.env.COLLAB_SERVICE_URL;
 const MATCH_SERVICE_URL = process.env.MATCH_SERVICE_URL;
 
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
+//async function to check if token is blacklisted (for logout)
+async function authMiddleware(req, res, next) {
+  const token = req.cookies.token;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     return res.status(401).json({ error: "Unauthorized. No token provided." });
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check if token is blacklisted
+    const isBlacklisted = await redisClient.get(`bl:${decoded.userId}:${decoded.iat}`);
+    if (isBlacklisted) {
+      return res.status(401).json({ error: "Unauthorized. Token has been revoked." });
+    }
+
     req.user = { userId: decoded.userId, role: decoded.role };
     next();
   } catch (err) {
@@ -63,6 +73,28 @@ function methodRoleMiddleware(req, res, next) {
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "api-gateway" });
+});
+
+//intercept logout before it reaches the user-service proxy
+app.post("/api/auth/logout", async (req, res) => {
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+      if (ttl > 0) {
+        await redisClient.set(`bl:${decoded.userId}:${decoded.iat}`, "1", "EX", ttl);
+      }
+    } catch {
+       /* token already expired, no need to blacklist */ 
+    }
+  }
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  return res.status(200).json({ message: "Logged out successfully." });
 });
 
 app.use(

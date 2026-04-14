@@ -27,5 +27,18 @@ describe("authStore", () => {
     const { result } = renderHook(() => useAuthStore());
 
     act(() => result.current.setUser(mockUser));
+
+    expect(result.current.user).toEqual(mockUser);
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+
+  it("should clear user and mark as unauthenticated after clearUser", () => {
+    const { result } = renderHook(() => useAuthStore());
+
+    act(() => result.current.setUser(mockUser));
+    act(() => result.current.clearUser());
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
   });
 });

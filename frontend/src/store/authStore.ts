@@ -4,9 +4,8 @@ import { createJSONStorage, devtools, persist } from "zustand/middleware";
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
-  setUser: (user: User, token: string) => void;
+  setUser: (user: User) => void;
   clearUser: () => void;
 }
 
@@ -15,12 +14,11 @@ const useAuthStore = create<AuthState>()(
     persist(
       (set) => ({
         user: null,
-        token: null,
         isAuthenticated: false,
-        setUser: (user: User, token: string) =>
-          set({ user, token, isAuthenticated: true }),
+        setUser: (user: User) =>
+          set({ user, isAuthenticated: true }),
         clearUser: () =>
-          set({ user: null, token: null, isAuthenticated: false }),
+          set({ user: null, isAuthenticated: false }),
       }),
       {
         name: "auth",

@@ -13,6 +13,7 @@ interface fetchUserParams {
 async function loginUser(email: string, password: string) {
   const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
@@ -102,4 +103,11 @@ async function searchUser(userId: string) {
   return response.json();
 }
 
-export { loginUser, fetchUsers, deleteUser, searchUser };
+async function logoutUser() {
+  await fetch(`${BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export { loginUser, logoutUser, fetchUsers, deleteUser, searchUser };

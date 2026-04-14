@@ -85,6 +85,7 @@ services:
       COLLAB_SERVICE_URL: http://collab-app:3004
       MATCH_SERVICE_URL: http://matching-app:3003
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-key-change-in-production}
+      REDIS_URL: redis://matching-redis:6379
     ports:
       - "3000:3000"
     depends_on:
@@ -92,6 +93,7 @@ services:
       - questionbank-app
       - matching-app
       - collab-app
+      - matching-redis
     networks:
       - peerprep-network
 
