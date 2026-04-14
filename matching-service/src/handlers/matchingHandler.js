@@ -1,10 +1,12 @@
 const axios = require("axios");
+const redis = require("../config/redis");
 const {
   addToQueue,
   findMatch,
   removeFromQueue,
   setMatchStatus,
   getMatchStatus,
+  setBothMatchStatuses,
   MATCH_TIMEOUT,
 } = require("../services/matchingQueue");
 
@@ -52,10 +54,27 @@ async function requestMatch(req, res) {
     if (current && current.status === "matched") {
       return res.status(200).json(current);
     }
+    if (current && current.status === "cancelled") {
+      return;
+    }
 
     const result = await findMatch(userId, topics, difficulty);
 
     if (result.matched) {
+      // Re-check status — cancellation may have arrived while findMatch was running
+      const recheck = await getMatchStatus(userId);
+      if (recheck?.status === "cancelled" || recheck?.status === "timeout") {
+        setTimeout(poll, 2000);
+        return;
+      }
+
+      const lockKey = `match:session:lock:${result.sessionId}`;
+      const acquired = await redis.set(lockKey, userId, "NX", "EX", 30);
+      if (!acquired) {
+        setTimeout(poll, 2000);
+        return;
+      }
+
       let question = null;
       try {
         question = await questionMetaData(
@@ -100,8 +119,9 @@ async function requestMatch(req, res) {
         question,
         roomId,
       };
-      await setMatchStatus(userId, userAMatchedData);
-      await setMatchStatus(result.matchedUserId, userBMatchedData);
+     
+      await setBothMatchStatuses(userId, userAMatchedData, result.matchedUserId, userBMatchedData);
+
       return res.status(200).json(userAMatchedData);
     }
     setTimeout(poll, 2000);
@@ -140,9 +160,10 @@ async function checkMatchStatus(req, res) {
 async function questionMetaData(userAId, userBId, topic, difficulty) {
   /* get question history from user A
     get question history from user B */
+  const s2sHeaders = { headers: { "X-Service-Secret": process.env.SERVICE_SECRET } };
   const [historyA, historyB] = await Promise.all([
-    axios.get(`${USER_SERVICE_URL}/api/users/question_history/${userAId}`),
-    axios.get(`${USER_SERVICE_URL}/api/users/question_history/${userBId}`),
+    axios.get(`${USER_SERVICE_URL}/api/users/question_history/${userAId}`, s2sHeaders),
+    axios.get(`${USER_SERVICE_URL}/api/users/question_history/${userBId}`, s2sHeaders),
   ]);
   // union both users question history
   const parseHistory = (data) => (data ? data.split(",").filter(Boolean) : []);
