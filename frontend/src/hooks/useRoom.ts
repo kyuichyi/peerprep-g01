@@ -1,45 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import useAuthStore from "../store/authStore";
-
-// Mirrors the MatchQuestion shape used throughout the collab service
-export interface MatchQuestion {
-  questionId: number;
-  title: string;
-  description: string;
-  topicName: string;
-  difficulty: "easy" | "medium" | "hard";
-  testCases?: string;
-  constraints?: string;
-}
-
-export interface Room {
-  roomId: string;
-  sessionId: string;
-  userOneId: string;
-  userTwoId: string;
-  question: MatchQuestion;
-  connectedCount: number;
-  createdAt: string;
-}
-
-const COLLAB_API = "/api/collab";
+import { fetchRooms, type Room } from "../services/roomService";
 
 function useRoom() {
-  const { token } = useAuthStore();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRooms = useCallback(async () => {
+  const loadRooms = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${COLLAB_API}/rooms`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error(`Failed to fetch rooms (${res.status})`);
-      const data: Room[] = await res.json();
+      const data = await fetchRooms();
       setRooms(data);
       setFilteredRooms(data);
     } catch (err) {
@@ -47,11 +19,11 @@ function useRoom() {
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+    loadRooms();
+  }, [loadRooms]);
 
   function handleSearch(keyword: string) {
     const lower = keyword.toLowerCase().trim();
@@ -60,13 +32,14 @@ function useRoom() {
       return;
     }
     setFilteredRooms(
-      rooms.filter(
-        (r) =>
-          r.roomId.toLowerCase().includes(lower) ||
-          r.userOneId.toLowerCase().includes(lower) ||
-          r.userTwoId.toLowerCase().includes(lower) ||
-          r.question.title.toLowerCase().includes(lower) ||
-          r.question.topicName.toLowerCase().includes(lower),
+      rooms.filter((r) =>
+        [
+          r.roomId,
+          r.userOneId,
+          r.userTwoId,
+          r.question.questionName,
+          r.question.topicName,
+        ].some((field) => field?.toLowerCase().includes(lower)),
       ),
     );
   }
@@ -76,7 +49,7 @@ function useRoom() {
     isLoading,
     error,
     handleSearch,
-    refetch: fetchRooms,
+    refetch: loadRooms,
   };
 }
 
