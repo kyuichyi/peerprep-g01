@@ -6,6 +6,8 @@ export interface Room {
   sessionId: string;
   userOneId: string;
   userTwoId: string;
+  userOneName: string | null;
+  userTwoName: string | null;
   question: MatchQuestion | null;
   connectedCount: number;
   createdAt: string;
