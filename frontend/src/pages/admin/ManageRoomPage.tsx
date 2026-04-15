@@ -3,7 +3,6 @@ import {
   Box,
   TableRow,
   TableCell,
-  Button,
   Typography,
   IconButton,
 } from "@mui/material";
@@ -13,7 +12,6 @@ import AdminTable from "../../features/admin/AdminTable";
 import SearchBar from "../../components/SearchBar";
 import ViewRoomDialog from "../../features/admin/ViewRoomDialog";
 import { type Room } from "../../services/roomService";
-import useAuthStore from "../../store/authStore";
 import useRoom from "../../hooks/useRoom";
 import ChipAttribute from "../../components/ChipAttribute";
 import { green, orange, red, grey } from "@mui/material/colors";
@@ -37,26 +35,8 @@ const DIFFICULTY_COLOR: Record<string, Color> = {
 };
 
 function ManageRoomPage() {
-  const { rooms, isLoading, error, handleSearch, refetch } = useRoom();
-  const { token } = useAuthStore();
+  const { rooms, isLoading, error, handleSearch } = useRoom();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [terminating, setTerminating] = useState<string | null>(null);
-
-  async function handleTerminate(roomId: string) {
-    setTerminating(roomId);
-    try {
-      const res = await fetch(`/api/collab/rooms/${roomId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error(`Terminate failed (${res.status})`);
-      await refetch();
-    } catch (err) {
-      console.error("[ManageRoomPage] Terminate error:", err);
-    } finally {
-      setTerminating(null);
-    }
-  }
 
   function renderRow(room: Room) {
     const connectedCount = room.connectedCount ?? 0;
@@ -100,21 +80,6 @@ function ManageRoomPage() {
         </TableCell>
 
         <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-          <Button
-            variant="contained"
-            size="small"
-            color="error"
-            loading={terminating === room.roomId}
-            onClick={() => handleTerminate(room.roomId)}
-            sx={{
-              borderRadius: 4,
-              textTransform: "none",
-              fontWeight: 500,
-              mr: 0.5,
-            }}
-          >
-            Terminate
-          </Button>
           <IconButton size="small" onClick={() => setSelectedRoom(room)}>
             <ChevronRightIcon fontSize="small" />
           </IconButton>
