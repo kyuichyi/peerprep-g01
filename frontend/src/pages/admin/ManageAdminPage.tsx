@@ -45,6 +45,9 @@ function ManageAdminPage() {
     error,
     loadAdmins,
     page,
+    totalPages,
+    loadNextPage,
+    loadPrevPage,
     createAdmin,
     deleteAdmin,
     deletingUserId,
@@ -52,8 +55,10 @@ function ManageAdminPage() {
   } = useAdmins();
 
   const currentUser = useAuthStore((s) => s.user);
+  const isSuperAdmin = currentUser?.role === "3";
 
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
@@ -63,13 +68,24 @@ function ManageAdminPage() {
   }, []);
 
   function handleDeleteClick(admin: User) {
+    setDeleteError(null);
     setDeleteTarget(admin);
   }
 
   async function handleConfirmDelete() {
     if (!deleteTarget) return;
-    await deleteAdmin(deleteTarget.email, deleteTarget.userId);
+    try {
+      await deleteAdmin(deleteTarget.email, deleteTarget.userId);
+      setDeleteTarget(null);
+    } catch (err) {
+      if (err instanceof Error) setDeleteError(err.message);
+      else setDeleteError("Failed to delete admin.");
+    }
+  }
+
+  function handleCancelDelete() {
     setDeleteTarget(null);
+    setDeleteError(null);
   }
 
   function handleOpenAdd() {
@@ -104,12 +120,22 @@ function ManageAdminPage() {
       <AdminTable
         tableButtons={[
           <SearchBar submitHandler={handleSearchSubmit} />,
-          <AdminTableAddButton label={"Add Admin"} onClick={handleOpenAdd} />,
+          ...(isSuperAdmin
+            ? [<AdminTableAddButton label={"Add Admin"} onClick={handleOpenAdd} />]
+            : []),
         ]}
         tableFields={tableFields}
         rows={admins}
         isLoading={isLoading}
         error={error}
+        pagination={{
+          page,
+          totalPages,
+          canPrev: page > 1,
+          canNext: page < totalPages,
+          onPrev: loadPrevPage,
+          onNext: loadNextPage,
+        }}
         renderRow={(admin, index) => (
           <TableRow key={admin.userId} hover sx={{ width: "100%" }}>
             <TableCell>{(page - 1) * 10 + index + 1}</TableCell>
@@ -120,7 +146,8 @@ function ManageAdminPage() {
               {new Date(admin.createdAt).toLocaleDateString()}
             </TableCell>
             <TableCell align="right">
-              {currentUser?.userId === admin.userId ? null : deletingUserId ===
+              {!isSuperAdmin ||
+              currentUser?.userId === admin.userId ? null : deletingUserId ===
                 admin.userId ? (
                 <CircularProgress size={20} />
               ) : (
@@ -150,8 +177,9 @@ function ManageAdminPage() {
         confirmLabel="Delete"
         confirmColor="error"
         isLoading={!!deletingUserId}
+        errorMessage={deleteError}
         onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={handleCancelDelete}
       />
 
       <Dialog

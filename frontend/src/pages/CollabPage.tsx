@@ -1,11 +1,14 @@
 import {
+  Alert,
   Box,
   Button,
   Container,
   MenuItem,
   Select,
+  Snackbar,
   Typography,
 } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import PageHeader from "../features/user/PageHeader";
 import useCollabSession from "../hooks/useCollabSession";
 import CollabPanel from "../features/user/CollabPanel";
@@ -22,6 +25,7 @@ import useAuthStore from "../store/authStore";
 function CollabPage() {
   const {
     question,
+    partnerStatus,
     language,
     setLanguage,
     handleEditorMount,
@@ -35,6 +39,39 @@ function CollabPage() {
 
   const myUserId = useAuthStore((s) => s.user?.userId ?? "");
 
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "warning" | "info";
+  }>({ open: false, message: "", severity: "info" });
+
+  const prevStatus = useRef(partnerStatus);
+
+  useEffect(() => {
+    if (prevStatus.current === partnerStatus) return;
+    prevStatus.current = partnerStatus;
+
+    const messages: Record<
+      string,
+      { message: string; severity: "success" | "warning" | "info" }
+    > = {
+      connected: {
+        message: "Your partner has joined the session",
+        severity: "success",
+      },
+      disconnected: {
+        message: "Your partner disconnected",
+        severity: "warning",
+      },
+      left: { message: "Your partner left the session", severity: "info" },
+    };
+
+    const entry = messages[partnerStatus];
+    if (entry) {
+      setSnackbar({ open: true, ...entry });
+    }
+  }, [partnerStatus]);
+
   return (
     <Box
       sx={{
@@ -44,7 +81,7 @@ function CollabPage() {
         bgcolor: "#f5f5f5",
       }}
     >
-      <PageHeader />
+      <PageHeader isAdmin={false} />
 
       <Box
         sx={{
@@ -180,6 +217,21 @@ function CollabPage() {
         onConfirm={handleLeave}
         onCancel={() => setLeaveDialogOpen(false)}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

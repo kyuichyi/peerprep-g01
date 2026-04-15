@@ -78,12 +78,6 @@ function useUsers() {
     try {
       await deleteUserRequest(userId);
       setUsers((prev) => prev.filter((u) => u.userId !== userId));
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        console.log("An unexpected error occurred");
-      }
     } finally {
       setDeletingUserId(null);
     }
@@ -95,6 +89,7 @@ function useUsers() {
     error,
     loadUsers,
     cursorOffset,
+    hasMore,
     loadNextUsers,
     deleteUser,
     deletingUserId,

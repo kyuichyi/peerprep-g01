@@ -7,7 +7,6 @@ import {
   Chip,
   Grid,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PageHeader from "../features/user/PageHeader";
 import useMatch from "../hooks/useMatch";
@@ -62,11 +61,12 @@ const HOW_IT_WORKS = [
 ];
 
 function UserHomePage() {
-  const navigate = useNavigate();
   const {
     user,
     topics,
     topicLoading,
+    topicError,
+    retryTopics,
     selectedTopics,
     toggleTopic,
     selectedDifficulty,
@@ -79,12 +79,11 @@ function UserHomePage() {
     handleEnterRoom,
   } = useMatch();
 
-  // Check if the user has admin privileges
   const isAdmin = user?.role === "2" || user?.role === "3";
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", pb: 6 }}>
-      <PageHeader />
+      <PageHeader isAdmin={isAdmin} />
       {/* Dialogs */}
       <MatchLoadingDialog
         open={matchState === "waiting"}
@@ -99,20 +98,8 @@ function UserHomePage() {
         onEnterRoom={handleEnterRoom}
       />
 
-      {/*Admin shortcut*/}
-      {isAdmin && (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate("/admin/manage-user")}
-          sx={{ mt: 2 }}
-        >
-          Manage Admins (User Directory)
-        </Button>
-      )}
-
       {/* Header */}
-      <Box sx={{ textAlign: "center", pt: isAdmin ? 2 : 5, pb: 3 }}>
+      <Box sx={{ textAlign: "center", pt: 5, pb: 3 }}>
         <Typography variant="h4" fontWeight={700}>
           Find Your Coding Partner
         </Typography>
@@ -149,13 +136,23 @@ function UserHomePage() {
 
             {topicLoading ? (
               <Typography variant="caption" color="text.secondary">
-                {" "}
                 Loading Topics...
               </Typography>
+            ) : topicError ? (
+              <Box sx={{ mb: 3, textAlign: "center" }}>
+                <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                  Failed to load topics.
+                </Typography>
+                <Button size="small" variant="outlined" onClick={retryTopics}>
+                  Retry
+                </Button>
+              </Box>
             ) : (
               <Grid container spacing={4} sx={{ mb: 3 }}>
                 {topics.map((t) => {
-                  const selected = selectedTopics.some((s) => s.topicId === t.topicId);
+                  const selected = selectedTopics.some(
+                    (s) => s.topicId === t.topicId,
+                  );
                   return (
                     <Grid size={{ xs: 6, md: 3 }} key={t.topicId}>
                       <Box
