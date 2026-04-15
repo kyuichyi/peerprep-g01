@@ -94,4 +94,34 @@ const getUserHistory = async (req, res) => {
   }
 };
 
-module.exports = { createHistoryInternal, getUserHistory };
+// GET /api/internal/users?ids=uuid1,uuid2,...
+// Bulk fetch userId → userName mapping for cross-service display enrichment.
+const getUsersByIds = async (req, res) => {
+  try {
+    const idsParam = (req.query.ids || '').toString().trim();
+    if (!idsParam) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const ids = idsParam
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (ids.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const result = await db.query(
+      `SELECT "userId", "userName" FROM "user" WHERE "userId" = ANY($1::uuid[])`,
+      [ids]
+    );
+
+    return res.status(200).json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error('GET /api/internal/users error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+module.exports = { createHistoryInternal, getUserHistory, getUsersByIds };

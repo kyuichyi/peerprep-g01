@@ -42,6 +42,8 @@ function useRoom() {
           r.roomId,
           r.userOneId,
           r.userTwoId,
+          r.userOneName,
+          r.userTwoName,
           r.question?.questionName,
           r.question?.topicName,
         ].some((field) => field?.toLowerCase().includes(lower)),
