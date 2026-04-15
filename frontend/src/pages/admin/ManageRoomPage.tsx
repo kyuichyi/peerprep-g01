@@ -43,9 +43,9 @@ function ManageRoomPage() {
       <TableRow key={room.roomId} hover sx={{ cursor: "default" }}>
         <TableCell>{room.roomId}</TableCell>
 
-        <TableCell>{room.userOneId}</TableCell>
+        <TableCell>{room.userOneName ?? room.userOneId}</TableCell>
 
-        <TableCell>{room.userTwoId}</TableCell>
+        <TableCell>{room.userTwoName ?? room.userTwoId}</TableCell>
 
         <TableCell>
           <Typography variant="body2" noWrap sx={{ maxWidth: 220 }}>
